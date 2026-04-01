@@ -28,7 +28,7 @@ const AdminSidebar = ({ toggleSidebar }) => {
           className="text-2xl font-medium"
           onClick={toggleSidebar}
         >
-          Rabbit
+          WastraWear
         </Link>
       </div>
 
