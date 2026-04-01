@@ -26,6 +26,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://wander-vastra-dv7f.vercel.app",
   "https://wander-vastra.vercel.app",
+  "https://www.wastrawear.com/",
 ];
 
 app.use(
@@ -50,7 +51,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.send("Welcome to WanderVastra API");
+  res.send("Welcome to WastraWear API");
 });
 
 // API Routes
