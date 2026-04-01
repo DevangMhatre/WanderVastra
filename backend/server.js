@@ -26,7 +26,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://wander-vastra-dv7f.vercel.app",
   "https://wander-vastra.vercel.app",
-  "https://www.wastrawear.com/",
+  "https://www.wastrawear.com",
 ];
 
 app.use(
