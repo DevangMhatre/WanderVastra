@@ -1,29 +1,25 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import RadioFilter from "./RadioFilter";
+
+const getFiltersFromParams = (params) => ({
+  category: params.category || "all",
+  gender: params.gender || "all",
+  color: params.color || "",
+  size: params.size ? params.size.split(",") : [],
+  material: params.material ? params.material.split(",") : [],
+  brand: params.brand ? params.brand.split(",") : [],
+  minPrice: Number(params.minPrice) || 0,
+  maxPrice: Number(params.maxPrice) || 100,
+});
 
 const FilterSidebar = () => {
   // ? Declaring a state variable to read and define the query params
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState(() => {
-    const params = Object.fromEntries([...searchParams]);
-
-    return {
-      category: params.category || "",
-      gender: params.gender || "",
-      color: params.color || "",
-      size: params.size ? params.size.split(",") : [],
-      material: params.material ? params.material.split(",") : [],
-      brand: params.brand ? params.brand.split(",") : [],
-      minPrice: Number(params.minPrice) || 0,
-      maxPrice: Number(params.maxPrice) || 100,
-    };
-  });
-
-  const [priceRange, setPriceRange] = useState([
-    0,
-    Number(searchParams.get("maxPrice")) || 100,
-  ]);
+  const [filters, setFilters] = useState(() =>
+    getFiltersFromParams(Object.fromEntries([...searchParams])),
+  );
 
   const sizes = ["S", "M", "L", "XL", "XXL"];
 
@@ -47,25 +43,13 @@ const FilterSidebar = () => {
     "ChicStyle",
   ];
 
-  const categories = ["Top Wear", "Bottom Wear"];
+  const categories = ["All", "Top Wear", "Bottom Wear"];
 
-  const genders = ["Men", "Women"];
+  const genders = ["All", "Men", "Women"];
 
   useEffect(() => {
     const params = Object.fromEntries([...searchParams]);
-
-    setFilters({
-      category: params.category || "",
-      gender: params.gender || "",
-      color: params.color || "",
-      size: params.size ? params.size.split(",") : [],
-      material: params.material ? params.material.split(",") : [],
-      brand: params.brand ? params.brand.split(",") : [],
-      minPrice: Number(params.minPrice) || 0,
-      maxPrice: Number(params.maxPrice) || 100,
-    });
-
-    setPriceRange([0, Number(params.maxPrice) || 100]);
+    setFilters(getFiltersFromParams(params));
   }, [searchParams]);
 
   const handleFilterChange = (e) => {
@@ -91,7 +75,11 @@ const FilterSidebar = () => {
     Object.keys(newFilters).forEach((key) => {
       if (Array.isArray(newFilters[key]) && newFilters[key].length > 0) {
         params.set(key, newFilters[key].join(","));
-      } else if (newFilters[key]) {
+      } else if (
+        newFilters[key] !== "" &&
+        newFilters[key] !== "All" &&
+        newFilters[key] !== 0
+      ) {
         params.set(key, newFilters[key]);
       }
     });
@@ -101,10 +89,18 @@ const FilterSidebar = () => {
     // navigate(`?${params.toString()}`);
   };
 
+  // const handlePriceChange = (e) => {
+  //   const newPrice = e.target.value;
+  //   setPriceRange([0, newPrice]);
+  //   const newFilters = { ...filters, minPrice: 0, maxPrice: newPrice };
+  //   setFilters(newFilters);
+  //   updateURLParams(newFilters);
+  // };
+
   const handlePriceChange = (e) => {
     const newPrice = e.target.value;
-    setPriceRange([0, newPrice]);
     const newFilters = { ...filters, minPrice: 0, maxPrice: newPrice };
+
     setFilters(newFilters);
     updateURLParams(newFilters);
   };
@@ -113,55 +109,21 @@ const FilterSidebar = () => {
     <div className="p-4">
       <h3 className="text-xl font font-medium text-gray-800 mb-4">Filter</h3>
 
-      {/* Category Filter */}
-      <div className="mb-6">
-        <span className="block text-gray-600 font-medium mb-2">Category</span>
-        {categories.map((category) => {
-          const id = `category-${category}`;
-          return (
-            <div key={category} className="flex items-center mb-1">
-              <input
-                id={id}
-                type="radio"
-                name="category"
-                value={category}
-                checked={filters.category === category}
-                onChange={handleFilterChange}
-                className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-green-300"
-              />
+      <RadioFilter
+        title="Category"
+        name="category"
+        options={categories}
+        value={filters.category}
+        onChange={handleFilterChange}
+      />
 
-              <label htmlFor={id} className="text-gray-700 cursor-pointer">
-                {category}
-              </label>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Gender Filter */}
-      <div className="mb-6">
-        <span className="block text-gray-600 font-medium mb-2">Gender</span>
-        {genders.map((gender) => {
-          const id = `gender-${gender}`;
-          return (
-            <div key={gender} className="flex items-center mb-1">
-              <input
-                id={id}
-                type="radio"
-                name="gender"
-                value={gender}
-                checked={filters.gender === gender}
-                onChange={handleFilterChange}
-                className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-green-300"
-              />
-
-              <label htmlFor={id} className="text-gray-700 cursor-pointer">
-                {gender}
-              </label>
-            </div>
-          );
-        })}
-      </div>
+      <RadioFilter
+        title="Gender"
+        name="gender"
+        options={genders}
+        value={filters.gender}
+        onChange={handleFilterChange}
+      />
 
       {/* Price Range Filter */}
       <div className="mb-8">
@@ -170,16 +132,16 @@ const FilterSidebar = () => {
         </label>
         <input
           type="range"
-          name="priceRange"
+          name="maxPrice"
           min={0}
           max={100}
-          value={priceRange[1]}
+          value={filters.maxPrice}
           onChange={handlePriceChange}
           className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
         />
         <div className="flex justify-between text-gray-600 mb-2">
           <span>$0</span>
-          <span>${priceRange[1]}</span>
+          <span>${filters.maxPrice}</span>
         </div>
       </div>
 
@@ -282,4 +244,64 @@ export default FilterSidebar;
           })}
         </div>
       </div> */
+}
+
+// Ok
+
+{
+  /* Category Filter */
+}
+{
+  /* <div className="mb-6">
+  <span className="block text-gray-600 font-medium mb-2">Category</span>
+  {categories.map((category) => {
+    const id = `category-${category}`;
+    return (
+      <div key={category} className="flex items-center mb-1">
+        <input
+          id={id}
+          type="radio"
+          name="category"
+          value={category}
+          checked={filters.category === category}
+          onChange={handleFilterChange}
+          className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-green-300"
+        />
+
+        <label htmlFor={id} className="text-gray-700 cursor-pointer">
+          {category}
+        </label>
+      </div>
+    );
+  })}
+</div>; */
+}
+
+{
+  /* Gender Filter */
+}
+{
+  /* <div className="mb-6">
+  <span className="block text-gray-600 font-medium mb-2">Gender</span>
+  {genders.map((gender) => {
+    const id = `gender-${gender}`;
+    return (
+      <div key={gender} className="flex items-center mb-1">
+        <input
+          id={id}
+          type="radio"
+          name="gender"
+          value={gender}
+          checked={filters.gender === gender}
+          onChange={handleFilterChange}
+          className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-400 border-green-300"
+        />
+
+        <label htmlFor={id} className="text-gray-700 cursor-pointer">
+          {gender}
+        </label>
+      </div>
+    );
+  })}
+</div>; */
 }

@@ -1,12 +1,17 @@
 const validator = require("validator");
 
-const validateSignUpData = (req) => {
-  const { name, email, password } = req.body;
+const validateSignUpData = (data = {}) => {
+  const { name, email, password } = data;
+
   if (!name || !email || !password) {
     throw new Error("All fields are required.");
-  } else if (!validator.isEmail(email)) {
+  }
+
+  if (!validator.isEmail(email)) {
     throw new Error("Email is not valid");
-  } else if (!validator.isStrongPassword(password)) {
+  }
+
+  if (!validator.isStrongPassword(password)) {
     throw new Error("Password is not valid");
   }
 };

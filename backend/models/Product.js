@@ -18,6 +18,12 @@ const productSchema = new mongoose.Schema(
     },
     discountPrice: {
       type: Number,
+      validate: {
+        validator: function (value) {
+          return value <= this.price;
+        },
+        message: "Discount price cannot be greater than price",
+      },
     },
     countInStock: {
       type: Number,
@@ -39,6 +45,7 @@ const productSchema = new mongoose.Schema(
     sizes: {
       type: [String],
       required: true,
+      default: [],
     },
     colors: [
       {
@@ -114,5 +121,8 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+productSchema.index({ price: 1 });
+productSchema.index({ category: 1 });
 
 module.exports = mongoose.model("Product", productSchema);

@@ -1,102 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
+const asyncHandler = require("../utils/asyncHandler");
+const productController = require("../controllers/productController");
 
 const productRouter = express.Router();
 
 // @route GET /api/products
 // @desc Get all products with optional query filter
 // @access Public
-productRouter.get("/", async (req, res) => {
-  try {
-    const {
-      collection,
-      size,
-      color,
-      gender,
-      minPrice,
-      maxPrice,
-      sortBy,
-      search,
-      category,
-      material,
-      brand,
-      page = 1,
-      limit,
-    } = req.query;
-
-    const query = {};
-
-    if (collection && collection !== "all") {
-      query.collections = collection;
-    }
-
-    if (category && category !== "all") {
-      query.category = category;
-    }
-
-    if (material) {
-      query.material = { $in: material.split(",") };
-    }
-
-    if (brand) {
-      query.brand = { $in: brand.split(",") };
-    }
-
-    if (size) {
-      query.sizes = { $in: size.split(",") };
-    }
-
-    if (color) {
-      query.colors = { $in: color.split(",") };
-    }
-
-    if (gender) {
-      query.gender = gender;
-    }
-
-    if (minPrice || maxPrice) {
-      query.price = {};
-
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
-    }
-
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    let sort = {};
-
-    if (sortBy === "priceAsc") sort.price = 1;
-    if (sortBy === "priceDesc") sort.price = -1;
-    if (sortBy === "popularity") sort.rating = -1;
-
-    // const skip = (page - 1) * limit;
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const products = await Product.find(query)
-      .sort(sort)
-      .skip(skip)
-      .limit(Number(limit));
-
-    const totalProducts = await Product.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: products,
-      totalProducts,
-      totalPages: Math.ceil(totalProducts / limit),
-      currentPage: Number(page),
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-});
+productRouter.get("/", asyncHandler(productController.getAllProducts));
 
 // @route GET /api/products/best-seller
 // @desc Retreives the product with highest rating

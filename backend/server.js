@@ -18,6 +18,10 @@ const adminRouter = require("./routes/admin");
 const productAdminRouter = require("./routes/productAdmin");
 const orderAdminRouter = require("./routes/orderAdmin");
 const webhookRouter = require("./routes/webhook");
+// Error Handling
+const errorHandler = require("./middlewares/error");
+// Logging
+const requestLogger = require("./middlewares/logger");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,13 +46,16 @@ app.use(
   }),
 );
 
-app.use("/api/webhooks", express.raw({ type: "application/json" }));
-// Webhook
-app.use("/api/webhooks", webhookRouter);
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Log
+app.use(requestLogger);
+
+app.use("/api/webhooks", express.raw({ type: "application/json" }));
+// Webhook
+app.use("/api/webhooks", webhookRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to WastraWear API");
@@ -66,6 +73,9 @@ app.use("/api/subscribe", subscribeRouter);
 app.use("/api/admin/users", adminRouter);
 app.use("/api/admin/products", productAdminRouter);
 app.use("/api/admin/orders", orderAdminRouter);
+
+// Error Handling
+app.use(errorHandler);
 
 connectDB()
   .then(() => {

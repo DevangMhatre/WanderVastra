@@ -35,10 +35,25 @@ export const fetchProductsByFilter = createAsyncThunk(
       const query = new URLSearchParams();
 
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) query.append(key, value);
+        // 🟢 Handle arrays (size, material, brand)
+        if (Array.isArray(value) && value.length > 0) {
+          query.set(key, value.join(","));
+        }
+        // 🟢 Ignore "All"
+        else if (value && value !== "All") {
+          query.set(key, value);
+        }
+        // 🟢 Handle numbers like 0 (important for price)
+        else if (typeof value === "number") {
+          query.set(key, value);
+        }
       });
 
       const response = await api.get(`/api/products?${query.toString()}`);
+
+      if (!response.data.success) {
+        throw new Error(response.data.message);
+      }
 
       return response.data.data;
     } catch (error) {

@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const { adminOnly, userAuth } = require("../middlewares/auth");
 const Product = require("../models/Product");
+const { clearProductCache } = require("../utils/cache");
 
 const productAdminRouter = express.Router();
 
@@ -33,6 +34,8 @@ productAdminRouter.post("/", userAuth, adminOnly, async (req, res) => {
       ...req.body,
       user: req.user._id,
     });
+
+    await clearProductCache();
 
     res.status(201).json({
       success: true,
@@ -106,6 +109,8 @@ productAdminRouter.put("/:id", userAuth, adminOnly, async (req, res) => {
       });
     }
 
+    await clearProductCache();
+
     res.json({
       success: true,
       message: "Product updated successfully",
@@ -139,6 +144,8 @@ productAdminRouter.delete("/:id", userAuth, adminOnly, async (req, res) => {
         message: "Product not found",
       });
     }
+
+    await clearProductCache();
 
     res.json({
       success: true,
