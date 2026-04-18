@@ -29,6 +29,7 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   "http://localhost:5173",
   "https://wander-vastra-dv7f.vercel.app",
+  "https://wander-vastra-dv7f-p80y8mblx-mhatre-devangs-projects.vercel.app",
   "https://wander-vastra.vercel.app",
   "https://www.wastrawear.com",
 ];
