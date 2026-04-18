@@ -35,14 +35,19 @@ const getAllProducts = async (queryParams) => {
   const cacheKey = buildCacheKey(queryParams);
 
   // 🔹 Check cache
-  try {
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log(`⚡ Cache HIT: ${cacheKey}`);
-      return JSON.parse(cachedData);
+  let cachedData = null;
+
+  if (redisClient) {
+    try {
+      cachedData = await redisClient.get(cacheKey);
+    } catch (err) {
+      console.error("Redis read error:", err.message);
     }
-  } catch (err) {
-    console.error("Redis read error:", err);
+  }
+
+  if (cachedData) {
+    console.log(`⚡ Cache HIT: ${cacheKey}`);
+    return JSON.parse(cachedData);
   }
 
   const query = {};
@@ -89,11 +94,14 @@ const getAllProducts = async (queryParams) => {
   }
 
   // ✅ PRICE
-  if (minPrice || maxPrice) {
+  if (minPrice !== undefined || maxPrice !== undefined) {
     query.discountPrice = {};
 
-    if (minPrice) query.discountPrice.$gte = Number(minPrice);
-    if (maxPrice) query.discountPrice.$lte = Number(maxPrice);
+    if (minPrice !== undefined && minPrice !== "")
+      query.discountPrice.$gte = Number(minPrice);
+
+    if (maxPrice !== undefined && maxPrice !== "")
+      query.discountPrice.$lte = Number(maxPrice);
   }
 
   // ✅ SEARCH
@@ -134,12 +142,13 @@ const getAllProducts = async (queryParams) => {
   };
 
   // 🔹 Cache result
-  try {
-    await redisClient.set(cacheKey, JSON.stringify(result), { EX: 60 });
-  } catch (err) {
-    console.error("Redis write error:", err);
+  if (redisClient) {
+    try {
+      await redisClient.set(cacheKey, JSON.stringify(result), { EX: 60 });
+    } catch (err) {
+      console.error("Redis write error:", err.message);
+    }
   }
-
   return result;
 };
 

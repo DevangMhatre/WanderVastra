@@ -4,10 +4,16 @@ const AppError = require("../utils/AppError");
 const redisClient = require("../utils/redisClient");
 
 const register = async ({ name, email, password }) => {
-  await redisClient.set("test", "hello");
-  const value = await redisClient.get("test");
-
-  console.log(value); // hello
+  // ✅ SAFE REDIS USAGE
+  if (redisClient) {
+    try {
+      await redisClient.set("test", "hello");
+      const value = await redisClient.get("test");
+      console.log(value);
+    } catch (err) {
+      console.log("Redis skipped");
+    }
+  }
 
   const normalizedEmail = email?.toLowerCase();
 
