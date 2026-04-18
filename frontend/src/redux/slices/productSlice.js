@@ -8,6 +8,10 @@ import api from "../axios";
 
 const initialState = {
   products: [],
+  totalPages: 1,
+  currentPage: 1,
+  totalProducts: 0,
+
   selectedProduct: null,
   similarProducts: [],
   loading: false,
@@ -25,6 +29,7 @@ const initialState = {
     material: "",
     collection: "",
     limit: "",
+    page: 1,
   },
 };
 
@@ -55,7 +60,7 @@ export const fetchProductsByFilter = createAsyncThunk(
         throw new Error(response.data.message);
       }
 
-      return response.data.data;
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching products");
     }
@@ -119,7 +124,11 @@ const productSlice = createSlice({
       // ! Fetch Products
       .addCase(fetchProductsByFilter.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = Array.isArray(action.payload) ? action.payload : [];
+        // state.products = Array.isArray(action.payload) ? action.payload : [];
+        state.products = action.payload.data || [];
+        state.totalPages = action.payload.totalPages || 1;
+        state.currentPage = action.payload.currentPage || 1;
+        state.totalProducts = action.payload.totalProducts || 0;
       })
 
       // ! Fetch Product Details
