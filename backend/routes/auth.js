@@ -20,9 +20,9 @@ userRouter.post(
 // @desc Authenticates the user
 // @access public
 userRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
   try {
+    let { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -30,12 +30,14 @@ userRouter.post("/login", async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    email = email.trim().toLowerCase();
+
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Credentials.",
+        message: "Invalid credentials",
       });
     }
 
@@ -44,23 +46,23 @@ userRouter.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "Invalid Credentials.",
+        message: "Invalid credentials",
       });
     }
 
-    // 🔐 Generate token
     const token = user.getJWT();
 
+    // ✅ FIXED cookie config
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 60 * 60 * 1000,
     });
 
     return res.status(200).json({
       success: true,
-      message: "Login Successful!",
+      message: "Login successful",
       data: {
         _id: user._id,
         name: user.name,

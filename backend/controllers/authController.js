@@ -10,7 +10,14 @@ const registerUser = async (req, res) => {
     maxAge: 60 * 60 * 1000,
   });
 
-  res.status(201).json({
+  res.cookie("token", result.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 60 * 60 * 1000,
+  });
+
+  return res.status(201).json({
     success: true,
     message: "Registration Successful!",
     data: result.user,

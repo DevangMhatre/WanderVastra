@@ -29,9 +29,7 @@ export const loginUser = createAsyncThunk(
       // console.log(response.data.data);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Something went wrong",
-      );
+      return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   },
 );
@@ -53,7 +51,7 @@ export const registerUser = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Something went wrong",
+        error.response?.data?.message || "Registration failed",
       );
     }
   },
@@ -66,6 +64,7 @@ export const checkAuth = createAsyncThunk(
     try {
       const response = await api.get("/api/users/me");
       return response.data.data;
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       return rejectWithValue("Not authenticated.");
     }

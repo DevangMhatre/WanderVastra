@@ -4,7 +4,6 @@ const AppError = require("../utils/AppError");
 const redisClient = require("../utils/redisClient");
 
 const register = async ({ name, email, password }) => {
-  // ✅ SAFE REDIS USAGE
   if (redisClient) {
     try {
       await redisClient.set("test", "hello");

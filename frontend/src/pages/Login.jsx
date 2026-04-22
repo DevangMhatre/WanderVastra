@@ -4,30 +4,54 @@ import login from "../assets/login.webp";
 import { loginUser } from "../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, mergeCart } from "../redux/slices/cartSlice";
+import { toast } from "sonner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { cart } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get redirect parameter and check if it's checkout or something
   const redirect = new URLSearchParams(location.search).get("redirect") || "/";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = await dispatch(loginUser({ email, password }));
+    if (!email || !password) {
+      return toast.error("Please fill all fields");
+    }
 
-    if (loginUser.fulfilled.match(result)) {
-      if (cart?.products?.length > 0) {
-        await dispatch(mergeCart());
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return toast.error("Invalid email format");
+    }
+
+    try {
+      setLoading(true);
+
+      const result = await dispatch(loginUser({ email, password }));
+
+      if (loginUser.fulfilled.match(result)) {
+        toast.success("Login successful 🚀");
+
+        if (cart?.products?.length > 0) {
+          await dispatch(mergeCart());
+        }
+
+        await dispatch(fetchCart());
+        navigate(redirect);
+      } else {
+        const message = result.payload || "Login failed";
+        toast.error(message);
       }
-      await dispatch(fetchCart());
-
-      navigate(redirect);
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,13 +62,11 @@ const Login = () => {
           onSubmit={handleSubmit}
           className="w-full max-w-md bg-white p-8 rounded-lg border shadow-sm"
         >
-          {/* <div className="flex justify-center mb-6">
-            <h2 className="text-xl font-medium">Rabbit</h2>
-          </div> */}
           <h2 className="text-3xl font-bold text-center mb-6">Login</h2>
           <p className="text-center mb-6">
             Enter your username and password to Login.
           </p>
+
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2">Email</label>
             <input
@@ -55,6 +77,7 @@ const Login = () => {
               placeholder="Enter your email address"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2">Password</label>
             <input
@@ -65,12 +88,15 @@ const Login = () => {
               placeholder="Enter your password"
             />
           </div>
+
           <button
             type="submit"
-            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800 transition cursor-pointer"
+            disabled={loading}
+            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800 transition cursor-pointer disabled:opacity-50"
           >
-            Sign In
+            {loading ? "Signing in..." : "Sign In"}
           </button>
+
           <p className="mt-6 text-center text-sm">
             Don't have an account?
             <Link
@@ -95,16 +121,5 @@ const Login = () => {
     </div>
   );
 };
-export default Login;
 
-// useEffect(() => {
-//   if (cart?.products?.length > 0) {
-//     dispatch(mergeCart())
-//       .unwrap()
-//       .then(() => {
-//         navigate(isCheckoutRedirect ? "/checkout" : "/");
-//       });
-//   } else {
-//     navigate(isCheckoutRedirect ? "/checkout" : "/");
-//   }
-// }, [cart, navigate, isCheckoutRedirect, dispatch]);
+export default Login;

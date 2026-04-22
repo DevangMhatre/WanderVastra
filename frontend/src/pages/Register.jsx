@@ -4,31 +4,63 @@ import { useDispatch, useSelector } from "react-redux";
 import register from "../assets/register.webp";
 import { registerUser } from "../redux/slices/authSlice";
 import { fetchCart, mergeCart } from "../redux/slices/cartSlice";
+import { toast } from "sonner";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { cart } = useSelector((state) => state.cart);
 
-  // Get redirect parameter and check if it's checkout or something
   const redirect = new URLSearchParams(location.search).get("redirect") || "/";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const result = await dispatch(registerUser({ name, email, password }));
+    if (!name || !email || !password) {
+      return toast.error("All fields are required");
+    }
 
-    if (registerUser.fulfilled.match(result)) {
-      if (cart?.products?.length > 0) {
-        await dispatch(mergeCart());
+    if (name.length < 3) {
+      return toast.error("Name must be at least 3 characters");
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return toast.error("Invalid email format");
+    }
+
+    if (password.length < 6) {
+      return toast.error("Password must be at least 6 characters");
+    }
+
+    try {
+      setLoading(true);
+
+      const result = await dispatch(registerUser({ name, email, password }));
+
+      if (registerUser.fulfilled.match(result)) {
+        toast.success("Account created successfully 🎉");
+
+        if (cart?.products?.length > 0) {
+          await dispatch(mergeCart());
+        }
+
+        await dispatch(fetchCart());
+        navigate(redirect);
+      } else {
+        const message = result.payload?.message || "Registration failed";
+        toast.error(message);
       }
-      await dispatch(fetchCart());
-
-      navigate(redirect);
+      // eslint-disable-next-line no-unused-vars
+    } catch (err) {
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,13 +71,11 @@ const Register = () => {
           onSubmit={handleSubmit}
           className="w-full max-w-md bg-white p-8 rounded-lg border shadow-sm"
         >
-          {/* <div className="flex justify-center mb-6">
-            <h2 className="text-xl font-medium">Rabbit</h2>
-          </div> */}
           <h2 className="text-3xl font-bold text-center mb-6">Register</h2>
           <p className="text-center mb-6">
-            Enter your username and password to Register.
+            Create your account to get started.
           </p>
+
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2">Name</label>
             <input
@@ -53,7 +83,7 @@ const Register = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full p-2 border rounded"
-              placeholder="Enter your Name"
+              placeholder="Enter your name"
             />
           </div>
 
@@ -67,6 +97,7 @@ const Register = () => {
               placeholder="Enter your email address"
             />
           </div>
+
           <div className="mb-4">
             <label className="block text-sm font-semibold mb-2">Password</label>
             <input
@@ -77,12 +108,15 @@ const Register = () => {
               placeholder="Enter your password"
             />
           </div>
+
           <button
             type="submit"
-            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800 transition cursor-pointer"
+            disabled={loading}
+            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800 transition cursor-pointer disabled:opacity-50"
           >
-            Sign Up
+            {loading ? "Creating account..." : "Sign Up"}
           </button>
+
           <p className="mt-6 text-center text-sm">
             Already have an account?{" "}
             <Link
@@ -99,7 +133,7 @@ const Register = () => {
         <div className="h-full flex flex-col justify-center items-center">
           <img
             src={register}
-            alt="Login to Account"
+            alt="Register"
             className="h-187.5 w-full object-cover"
           />
         </div>
@@ -107,4 +141,5 @@ const Register = () => {
     </div>
   );
 };
+
 export default Register;
